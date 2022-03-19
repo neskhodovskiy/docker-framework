@@ -32,12 +32,5 @@ RUN curl -sS https://getcomposer.org/installer | php -- --2 --install-dir=/usr/l
 
 COPY ../../../scripts/* /usr/local/bin
 
-# in order for these aliases to work, start the php-cli service with a login shell:
-# docker-compose run --rm php-cli bash -l
-RUN echo 'alias xon=". /usr/local/bin/xdebug-on.sh"' >> /root/.profile
-RUN echo 'alias xoff=". /usr/local/bin/xdebug-off.sh"' >> /root/.profile
-RUN echo 'alias tinker="php artisan tinker"' >> /root/.profile
-RUN echo 'alias art="php artisan"' >> /root/.profile
-RUN echo 'alias test="php artisan test"' >> /root/.profile
-RUN echo 'alias ..="cd .."' >> /root/.profile
-RUN echo 'alias ...="cd ../.."' >> /root/.profile
+COPY ../../../etc/bash/aliases.sh /root/aliases
+RUN cat /root/aliases >> /root/.profile

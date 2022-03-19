@@ -30,8 +30,5 @@ RUN printf "\n" | curl -4 'https://pecl.php.net/get/xdebug-3.1.0.tgz' -o xdebug.
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --2 --install-dir=/usr/local/bin --filename=composer
 
-RUN echo 'alias tinker="php artisan tinker"' >> /root/.profile
-RUN echo 'alias art="php artisan"' >> /root/.profile
-RUN echo 'alias test="php artisan test"' >> /root/.profile
-RUN echo 'alias ..="cd .."' >> /root/.profile
-RUN echo 'alias ...="cd ../.."' >> /root/.profile
+COPY ../../../etc/bash/aliases.sh /root/aliases
+RUN cat /root/aliases >> /root/.profile
