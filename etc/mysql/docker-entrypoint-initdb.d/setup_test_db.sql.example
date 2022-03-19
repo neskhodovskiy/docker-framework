@@ -1,0 +1,2 @@
+CREATE DATABASE `example_test` /*!40100 DEFAULT CHARACTER SET utf8 */;
+GRANT ALL PRIVILEGES ON example_test.* TO 'example'@'%'

@@ -1,0 +1,9 @@
+location ~ ^/(telescope|horizon|docs) {
+    root   /var/www/applications/api/public;
+    try_files $uri $uri/ /index.php?$query_string;
+    client_max_body_size 20m;
+    client_body_buffer_size 16k;
+
+    auth_basic           "Restricted Area";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+}

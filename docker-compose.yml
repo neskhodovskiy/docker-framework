@@ -1,0 +1,130 @@
+version: '2.2'
+services:
+
+  # PHP API
+  php-fpm:
+    build:
+      context: .
+      dockerfile: ${DOCKER_DIR}/php/Dockerfile.${PHP_VERSION}.fpm
+    container_name: ${COMPOSE_PROJECT_NAME}_phpfpm_${ENV}
+    dns: 8.8.8.8
+    restart: unless-stopped
+    expose:
+      - "9000"
+    volumes:
+      - ${APP_DIR}:/var/www/applications/${APP_NAME}
+      - ${PHP_CONF_DIR}/fpm/php.ini:/usr/local/etc/php/php.ini:ro
+      - ${PHP_CONF_DIR}/fpm/conf.d:/usr/local/etc/php/conf.d:ro
+      - ${STORAGE_DIR}:/var/www/applications/${APP_NAME}/storage
+      - ${STORAGE_DIR}/app/public:/var/www/applications/${APP_NAME}/public/storage
+      - ${LOG_DIR}/php/fpm:/var/log/php
+    environment:
+      - VIRTUAL_HOST=${API_HOSTNAME},telescope.${MAIN_HOSTNAME},horizon.${MAIN_HOSTNAME}
+      - VIRTUAL_PROTO=fastcgi
+      - VIRTUAL_ROOT=/var/www/applications/${APP_NAME}/public
+      - LETSENCRYPT_HOST=${API_HOSTNAME},telescope.${MAIN_HOSTNAME},horizon.${MAIN_HOSTNAME}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      - LOG_FILENAME=laravel.fpm.log
+      - MAIN_HOSTNAME=${MAIN_HOSTNAME}
+      - APP_NAME=${APP_NAME}
+    working_dir: /var/www/applications/${APP_NAME}
+    depends_on:
+      - db
+      - redis
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "10m"
+
+  # Horizon for running queue workers
+  horizon:
+    build:
+      context: .
+      dockerfile: ${DOCKER_DIR}/php/Dockerfile.${PHP_VERSION}.cli
+    container_name: ${COMPOSE_PROJECT_NAME}_horizon_${ENV}
+    dns: 8.8.8.8
+    restart: unless-stopped
+    volumes:
+      - ${APP_DIR}:/var/www/applications/${APP_NAME}
+      - ${PHP_CONF_DIR}/cli/php.ini:/usr/local/etc/php/php.ini:ro
+      - ${PHP_CONF_DIR}/cli/conf.d:/usr/local/etc/php/conf.d:ro
+      - ${STORAGE_DIR}:/var/www/applications/${APP_NAME}/storage
+      - ${STORAGE_DIR}/app/public:/var/www/applications/${APP_NAME}/public/storage
+      - ${LOG_DIR}/php/horizon:/var/log/php
+    environment:
+      - LOG_FILENAME=laravel.horizon.log
+      - MAIN_HOSTNAME=${MAIN_HOSTNAME}
+      - APP_NAME=${APP_NAME}
+    working_dir: /var/www/applications/${APP_NAME}
+    depends_on:
+      - db
+      - redis
+    command: php artisan horizon
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "10m"
+
+  # Container for running cron jobs
+  cron:
+    build:
+      context: .
+      dockerfile: ${DOCKER_DIR}/php/Dockerfile.${PHP_VERSION}.cli
+    container_name: ${COMPOSE_PROJECT_NAME}_cron_${ENV}
+    dns: 8.8.8.8
+    restart: unless-stopped
+    volumes:
+      - ${APP_DIR}:/var/www/applications/${APP_NAME}
+      - ${PHP_CONF_DIR}/cli/php.ini:/usr/local/etc/php/php.ini:ro
+      - ${PHP_CONF_DIR}/cli/conf.d:/usr/local/etc/php/conf.d:ro
+      - ${STORAGE_DIR}:/var/www/applications/${APP_NAME}/storage
+      - ${STORAGE_DIR}/app/public:/var/www/applications/${APP_NAME}/public/storage
+      - ${LOG_DIR}/php/cron:/var/log/php
+      - ${LOG_DIR}/cron:/var/log/cron
+      - ${CRON_CONF}:/etc/crontabs/root
+    environment:
+      - LOG_FILENAME=laravel.cron.log
+      - MAIN_HOSTNAME=${MAIN_HOSTNAME}
+      - APP_NAME=${APP_NAME}
+    working_dir: /var/www/applications/${APP_NAME}
+    depends_on:
+      - db
+      - redis
+    command: crond -f
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "10m"
+
+  # PHP CLI
+  php-cli:
+    build:
+      context: .
+      dockerfile: ${DOCKER_DIR}/php/Dockerfile.${PHP_VERSION}.cli
+    container_name: ${COMPOSE_PROJECT_NAME}_phpcli_${ENV}
+    dns: 8.8.8.8
+    restart: "no"
+    volumes:
+      - ${APP_DIR}:/var/www/applications/${APP_NAME}
+      - ${PHP_CONF_DIR}/cli/php.ini:/usr/local/etc/php/php.ini:ro
+      - ${PHP_CONF_DIR}/cli/conf.d:/usr/local/etc/php/conf.d:ro
+      - ${STORAGE_DIR}:/var/www/applications/${APP_NAME}/storage
+      - ${STORAGE_DIR}/app/public:/var/www/applications/${APP_NAME}/public/storage
+      - ${LOG_DIR}/php/cli:/var/log/php
+    environment:
+      - LOG_FILENAME=laravel.cli.log
+      - MAIN_HOSTNAME=${MAIN_HOSTNAME}
+      - APP_NAME=${APP_NAME}
+    working_dir: /var/www/applications/${APP_NAME}
+    depends_on:
+      - db
+      - redis
+    logging:
+        driver: "json-file"
+        options:
+            max-size: "10m"
+
+# Docker Networks
+networks:
+  default:
+    driver: bridge

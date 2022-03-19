@@ -1,0 +1,4 @@
+/etc/mysql/docker-entrypoint-initdb.d/*.sql
+/etc/nginx/.htpasswd
+.env
+.idea
