@@ -13,7 +13,7 @@ RUN apk add --no-cache libpng libpng-dev zlib-dev libjpeg-turbo-dev libwebp-dev 
 
 # Install php extensions
 RUN docker-php-ext-install mysqli pdo pdo_mysql pcntl exif zip
-RUN docker-php-ext-configure gd --with-jpeg && docker-php-ext-install gd
+RUN docker-php-ext-configure gd --with-jpeg-dir && docker-php-ext-install gd
 
 RUN printf "\n" | curl -4 'https://pecl.php.net/get/redis-5.3.4.tgz' -o redis.tgz \
         && pecl install redis.tgz \
