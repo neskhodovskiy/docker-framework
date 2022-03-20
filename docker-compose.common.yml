@@ -83,6 +83,23 @@ services:
         options:
             max-size: "10m"
 
+  # Letsencrypt
+  letsencrypt:
+    restart: unless-stopped
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: ${COMPOSE_PROJECT_NAME}_letsencrypt_${ENV}
+    depends_on:
+      - nginx-proxy
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - ${NGINX_PROXY_CERTS_DIR}:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - NGINX_DOCKER_GEN_CONTAINER=${COMPOSE_PROJECT_NAME}_dockergen_${ENV}
+      - NGINX_PROXY_CONTAINER=${COMPOSE_PROJECT_NAME}_nginxproxy_${ENV}
+      - preplist-prod
+
   # Dockerhost for xdebug
   dockerhost:
     image: qoomon/docker-host
